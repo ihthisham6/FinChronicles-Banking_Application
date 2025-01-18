@@ -24,6 +24,7 @@ import { authFormSchema } from '@/lib/utils';
 import CustomInput from './CustomInput';
 import { useRouter } from 'next/navigation';
 import { getLoggedInUser, signIn, signUp } from '@/lib/actions/user.actions';
+import PlaidLink from './PlaidLink';
 
 
 const AuthForm = ({type}: {type:string}) => {
@@ -46,8 +47,20 @@ const AuthForm = ({type}: {type:string}) => {
        setIsLoading(true);
        try{
         if(type=== 'sign-up'){
-             
-  const newUser = await signUp(data);
+         
+            const userData = {
+              firstName: data.firstName!,
+              lastName: data.lastName!,
+              address1: data.address1!,
+              city: data.city!,
+              state: data.state!,
+              postalCode: data.postalCode!,
+              dateOfBirth: data.dateOfBirth!,
+              ssn: data.ssn!,
+              email: data.email,
+              password: data.password
+            }
+  const newUser = await signUp(userData);
 setUser(newUser);
           }
         
@@ -101,9 +114,9 @@ if(response) router.push('/')
             </header>
             {user ? (
                 <div className="flex flex-col gap-4">
-
+<PlaidLink user={user} variant="primary" />
                     </div>
-            ):
+             ):
             (
                 <>
 <Form {...form}>
@@ -178,7 +191,7 @@ placeholder='Enter your password' />
          
     </footer>
                 </>
-            )}
+             )} 
     </section>
   )
 }
