@@ -1,4 +1,5 @@
 🤖 Introduction
+
 Built with Next.js, FinChronciles is a financial SaaS platform that connects to multiple bank accounts, displays transactions in real-time, allows users to transfer money to other platform users, and manages their finances altogether.
 
 
@@ -6,23 +7,14 @@ Built with Next.js, FinChronciles is a financial SaaS platform that connects to 
 ⚙️ Tech Stack
 
 Next.js
-
 TypeScript
-
 Appwrite
-
 Plaid
-
 Dwolla
-
 React Hook Form
-
 Zod
-
 TailwindCSS
-
 Chart.js
-
 ShadCN
 
 🔋 Features
