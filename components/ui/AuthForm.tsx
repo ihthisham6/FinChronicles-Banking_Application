@@ -140,10 +140,10 @@ if(response) router.push('/')
         <div className="flex gap-4">
           <CustomInput control={form.control}
           name="state" label="State"
-          placeholder="Example:MH" />
+          placeholder="Example:NY" />
           <CustomInput control={form.control}
           name="postalCode" label="Postal Code"
-          placeholder='Example: 400001' />
+          placeholder='Example: 40001' />
         </div>
         <div className="flex gap-4">
         <CustomInput control={form.control}
