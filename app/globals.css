@@ -356,7 +356,11 @@
   }
 
   .footer_image {
-    @apply relative size-5 max-xl:w-full max-xl:flex max-xl:justify-center max-xl:items-center;
+    @apply relative flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 transition-colors;
+  }
+  
+  .footer_image-mobile {
+    @apply relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 transition-colors mt-2;
   }
 
   /* Sidebar */

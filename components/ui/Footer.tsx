@@ -27,11 +27,20 @@ const Footer = ({user,type='desktop'}: FooterProps) => {
             {user?.email}
           </p>
       </div>
-      <div className="footer_image" onClick={handleLogOut}>
-        <Image src="icons/logout.svg" fill alt="jsm" />
+      <div 
+        className={`footer_image ${type === 'mobile' ? 'footer_image-mobile' : ''}`} 
+        onClick={handleLogOut}
+      >
+        <Image 
+          src="/icons/logout.svg" 
+          width={24} 
+          height={24} 
+          alt="Logout" 
+          className="hover:opacity-80 transition-opacity"
+        />
       </div>
-            </footer>
+    </footer>
   )
-           }
+}
 
 export default Footer
