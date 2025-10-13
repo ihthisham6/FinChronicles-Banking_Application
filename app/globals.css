@@ -355,12 +355,16 @@
     @apply flex flex-1 flex-col justify-center;
   }
 
-  .footer_image {
-    @apply relative flex items-center justify-center h-8 w-8 rounded-full hover:bg-gray-100 transition-colors;
+  .logout-button {
+    @apply relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 transition-colors;
   }
   
-  .footer_image-mobile {
-    @apply relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 transition-colors mt-2;
+  .logout-button-mobile {
+    @apply relative flex items-center justify-center h-12 w-12 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors mt-2 shadow-sm border border-gray-100;
+  }
+
+  .footer-mobile {
+    @apply flex items-center justify-between gap-4 py-4 px-2 bg-white rounded-lg;
   }
 
   /* Sidebar */
