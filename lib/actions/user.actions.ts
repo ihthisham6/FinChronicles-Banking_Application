@@ -8,6 +8,7 @@ import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestPr
 
 import { plaidClient } from '@/lib/plaid';
 import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
+import { getAccounts } from "./bank.actions";
 import { revalidatePath } from "next/cache";
 
 const {
@@ -36,27 +37,99 @@ export const getUserInfo = async({userId} :
   
 
 
-export const signIn = async({email,password} :
-    signInProps) => {
-    try{
-//mutation / database / make fetch
+// export const signIn = async({email,password} :
+//     signInProps) => {
+//     try{
+// //mutation / database / make fetch
 
-const { account } = await createAdminClient();
+// const { account } = await createAdminClient();
 
-const session = await account.createEmailPasswordSession(email, password);
+// const session = await account.createEmailPasswordSession(email, password);
       
-cookies().set("appwrite-session", session.secret, {
-  path: "/",
-  httpOnly: true,
-  sameSite: "strict",
-  secure: true,
-});
+// cookies().set("appwrite-session", session.secret, {
+//   path: "/",
+//   httpOnly: true,
+//   sameSite: "strict",
+//   secure: true,
+// });
 
-const user = await getUserInfo({ userId: session.userId})
-return parseStringify(user);
-    }catch(error){
-        console.log('Error',error);
+// const user = await getUserInfo({ userId: session.userId})
+// return parseStringify(user);
+//     }catch(error){
+//         console.log('Error',error);
+//     }
+//}
+
+export const signIn = async ({ email, password }: signInProps) => {
+  console.time('server-signin');
+  try {
+    // Clear any existing session first
+    cookies().delete("appwrite-session");
+    
+    // Get cached admin client
+    const { account, database } = await createAdminClient();
+    console.timeLog('server-signin', 'client created');
+    
+    // Create the session - this validates credentials
+    let session;
+    try {
+      session = await account.createEmailPasswordSession(email, password);
+    } catch (authError) {
+      console.error('Authentication failed:', authError);
+      return JSON.stringify({ 
+        success: false, 
+        error: 'Invalid email or password'
+      });
     }
+    console.timeLog('server-signin', 'session created');
+    
+    // Start prefetching user data in parallel with cookie setting
+    const userPromise = database.listDocuments(
+      DATABASE_ID!,
+      USER_COLLECTION_ID!,
+      [Query.equal('userId', [session.userId])]
+    );
+    
+    // Set the session cookie
+    cookies().set("appwrite-session", session.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+    console.timeLog('server-signin', 'cookie set');
+
+    // Wait for user data and start prefetching account data
+    const user = (await userPromise).documents[0];
+    if (!user) {
+      // User document not found - this shouldn't happen
+      throw new Error('User profile not found');
+    }
+
+    // Start loading accounts data - don't await, let it happen in background
+    getAccounts({ userId: user.$id }).catch(console.error);
+    console.timeLog('server-signin', 'prefetch started');
+
+    // Return minimal response with prefetch indicator
+    return JSON.stringify({ 
+      success: true, 
+      redirect: "/",
+      prefetch: true
+    });
+
+  } catch (error) {
+    // Make sure to clean up any partial session state
+    cookies().delete("appwrite-session");
+    
+    console.error('Error during sign-in:', error);
+    return JSON.stringify({ 
+      success: false, 
+      error: (error as Error).message 
+    });
+  } finally {
+    console.timeEnd('server-signin');
+  }
 }
 
 export const signUp = async({password,...userData}: SignUpParams) => {

@@ -21,21 +21,28 @@ export async function createSessionClient() {
   };
 }
 
+// Cache the admin client instance
+let adminClient: Client | null = null;
+
 export async function createAdminClient() {
-  const client = new Client()
-    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
-    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!)
-    .setKey(process.env.NEXT_APPWRITE_KEY!);
+  // Reuse existing client if available
+  if (!adminClient) {
+    console.time('client-init');
+    adminClient = new Client()
+      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT!)
+      .setKey(process.env.NEXT_APPWRITE_KEY!);
+    console.timeEnd('client-init');
+  }
+
+  // Create service instances once
+  const account = new Account(adminClient);
+  const database = new Databases(adminClient);
+  const users = new Users(adminClient);
 
   return {
-    get account() {
-      return new Account(client);
-    },
-    get database() {
-        return new Databases(client);
-    },
-    get user() {
-        return new Users(client);
-    }
+    account,
+    database,
+    users
   };
 }

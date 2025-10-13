@@ -66,8 +66,12 @@ export const getAccounts = async ({ userId }: getAccountsProps) => {
 // Get one bank account
 export const getAccount = async ({ appwriteItemId }: getAccountProps) => {
   try {
+    // Defensive: if no id provided, return null immediately.
+    if (!appwriteItemId) return null;
     // get bank from db
     const bank = await getBank({ documentId: appwriteItemId });
+    // If bank not found or missing access token, return null.
+    if (!bank || !bank.accessToken) return null;
 
     // get account info from plaid
     const accountsResponse = await plaidClient.accountsGet({
@@ -152,17 +156,30 @@ export const getTransactions = async ({
 }: getTransactionsProps) => {
   let hasMore = true;
   let transactions: any = [];
+  // Safety guard to prevent infinite loops in case an upstream API reports has_more
+  // incorrectly. This limits the number of iterations and prevents unbounded memory use.
+  const MAX_ITERATIONS = 50;
+  let iterations = 0;
 
   try {
+    // Guard: require an access token
+    if (!accessToken) return parseStringify([]);
+
     // Iterate through each page of new transaction updates for item
-    while (hasMore) {
+    while (hasMore && iterations < MAX_ITERATIONS) {
+      iterations++;
+
       const response = await plaidClient.transactionsSync({
         access_token: accessToken,
       });
 
-      const data = response.data;
+      const data = response?.data;
 
-      transactions = response.data.added.map((transaction) => ({
+      // If the response shape is unexpected, break out to avoid infinite loops.
+      if (!data || !Array.isArray(data.added)) break;
+
+      // Append (not overwrite) added transactions from each page.
+      const added = data.added.map((transaction) => ({
         id: transaction.transaction_id,
         name: transaction.name,
         paymentChannel: transaction.payment_channel,
@@ -175,7 +192,9 @@ export const getTransactions = async ({
         image: transaction.logo_url,
       }));
 
-      hasMore = data.has_more;
+      transactions = transactions.concat(added);
+
+      hasMore = !!data.has_more;
     }
 
     return parseStringify(transactions);

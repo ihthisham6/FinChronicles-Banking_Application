@@ -31,7 +31,19 @@ const CustomInput = ({ control, name, label, placeholder }: CustomInput) => {
                 placeholder={placeholder}
                 className="input-class"
                 type={name === 'password' ? 'password' : 'text'}
+                autoComplete="new-password" // Stronger prevention of autofill
                 {...field}
+                // Spread field props first, then override what we need
+                {...{
+                  // Override the name to prevent autofill
+                  name: `new-${name}`,
+                  // Safe focus handler with type check
+                  onFocus: (e) => {
+                    if (field.value) {
+                      e.target.value = field.value;
+                    }
+                  }
+                }}
               />
             </FormControl>
             <FormMessage className="form-message mt-2" />

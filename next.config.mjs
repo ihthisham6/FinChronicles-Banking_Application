@@ -6,6 +6,14 @@ const nextConfig = {
     },
     eslint:{
         ignoreDuringBuilds:true
+    },
+    // Force specific port
+    experimental: {
+        forceSwcTransforms: true
+    },
+    // Use port 3001 explicitly
+    serverOptions: {
+        port: 3001
     }
 };
 
