@@ -628,23 +628,6 @@
 //           email: data.email, password: data.password
 //         };
 //         const newUser = await signUp(userData);
-//         setUser(newUser);
-//         setIsLoading(false);
-//       }
-      
-//       if (type === 'sign-in') {
-//         await signIn({
-//           email: data.email,
-//           password: data.password,
-//         });
-//         // On success, this will redirect and the component will unmount.
-//         // We do not set isLoading to false.
-//       }
-//     } catch (error) {
-//        console.error("Submission failed on client:", error);
-//        // This will now run correctly if the server throws an error
-//        setIsLoading(false);
-//     }
 //   }
     
 //   return (
