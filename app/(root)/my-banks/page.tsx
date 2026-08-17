@@ -20,9 +20,9 @@ subtext="Effortlessly manage your banking activities"
             Your cards
           </h2>
           <div className="flex flex-wrap gap-6">
-          {accounts && accounts.data.map((a: Account) => (
+          {accounts && accounts.data.map((a: Account, index: number) => (
               <BankCard 
-                key={a.id}
+                key={a?.id || index}
                 account={a}
                 userName={loggedIn?.firstName}
               />
