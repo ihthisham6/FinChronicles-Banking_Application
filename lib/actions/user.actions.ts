@@ -132,54 +132,61 @@ export const signIn = async ({ email, password }: signInProps) => {
   }
 }
 
-export const signUp = async({password,...userData}: SignUpParams) => {
-    const { email,  firstName, lastName } = userData;
-    
+export const signUp = async ({ password, ...userData }: SignUpParams) => {
+  const { email, firstName, lastName } = userData;
+  
+  try {
+    const { account, database } = await createAdminClient();
+
     let newUserAccount;
-    try{
-        const { account ,database} = await createAdminClient();
-
-        newUserAccount =  await account.create(
+    try {
+      newUserAccount = await account.create(
         ID.unique(),
-         email,
-          password,
-          `${firstName} ${lastName}`
-        );
-        
-        if(!newUserAccount) throw new Error('Error creating user')
-
-          const dwollaCustomerUrl = await createDwollaCustomer({
-            ...userData,
-            type:'personal'
-          })
-
-          if(!dwollaCustomerUrl) throw new Error('Error creating dwolla customer')
-
-            const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
-
-            const newUser = await database.createDocument(
-              DATABASE_ID!,
-              USER_COLLECTION_ID!,
-              ID.unique(),
-              {
-              ...userData,
-              userId: newUserAccount.$id,
-              dwollaCustomerId,
-              dwollaCustomerUrl
-              }
-            )
-        const session = await account.createEmailPasswordSession(email, password);
-      
-        cookies().set("appwrite-session", session.secret, {
-          path: "/",
-          httpOnly: true,
-          sameSite: "strict",
-          secure: true,
-        });
-        return parseStringify(newUser);
-    }catch(error){
-        console.log('Error',error);
+        email,
+        password,
+        `${firstName} ${lastName}`
+      );
+    } catch (createError: any) {
+      console.error('Appwrite user creation failed:', createError);
+      return JSON.stringify({ success: false, error: createError.message || 'Error creating user' });
     }
+
+    const dwollaCustomerUrl = await createDwollaCustomer({
+      ...userData,
+      type: 'personal'
+    });
+
+    if (!dwollaCustomerUrl) throw new Error('Error creating dwolla customer');
+
+    const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
+
+    const newUser = await database.createDocument(
+      DATABASE_ID!,
+      USER_COLLECTION_ID!,
+      ID.unique(),
+      {
+        ...userData,
+        userId: newUserAccount.$id,
+        dwollaCustomerId,
+        dwollaCustomerUrl
+      }
+    );
+
+    const session = await account.createEmailPasswordSession(email, password);
+  
+    cookies().set("appwrite-session", session.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+    
+    return JSON.stringify({ success: true, user: parseStringify(newUser) });
+  } catch (error: any) {
+    console.error('Error during signUp:', error);
+    return JSON.stringify({ success: false, error: error.message || 'An unexpected error occurred during sign up' });
+  }
 }
 
 

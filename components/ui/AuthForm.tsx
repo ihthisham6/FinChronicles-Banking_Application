@@ -746,6 +746,7 @@ const AuthForm = ({ type, showDemoLogin = false }: AuthFormProps) => {
   const router = useRouter(); // Initialize the router
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState("");
   const formSchema = authFormSchema(type);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -854,6 +855,7 @@ const AuthForm = ({ type, showDemoLogin = false }: AuthFormProps) => {
 
     try {
       if (type === 'sign-up') {
+        updateProgress('authenticating');
         const userData = {
           firstName: data.firstName!, lastName: data.lastName!,
           address1: data.address1!, city: data.city!,
@@ -861,44 +863,60 @@ const AuthForm = ({ type, showDemoLogin = false }: AuthFormProps) => {
           dateOfBirth: data.dateOfBirth!, ssn: data.ssn!,
           email: data.email, password: data.password
         };
-        const newUser = await signUp(userData);
-        setUser(newUser);
-        setIsLoading(false);
+        const responseString = await signUp(userData);
+        const response = JSON.parse(responseString);
+        
+        if (response.success) {
+          setFormError("");
+          setUser(response.user);
+          setIsLoading(false);
+        } else {
+          console.error("Sign up failed:", response.error);
+          setFormError(response.error || "Failed to sign up.");
+          setIsLoading(false);
+          setLoginStage('error');
+          setLoginProgress(0);
+          setTimeout(() => {
+            setLoginStage('');
+          }, 2000);
+        }
       }
       
       if (type === 'sign-in') {
         updateProgress('authenticating');
-      const responseString = await signIn({
-        email: data.email,
-        password: data.password,
-      });
+        const responseString = await signIn({
+          email: data.email,
+          password: data.password,
+        });
 
-      const response = JSON.parse(responseString);
+        const response = JSON.parse(responseString);
 
-      if (response.success) {
-        updateProgress('creating_session');
-        // Use router.replace instead of window.location for faster navigation
-        // The session cookie is already set by the server action
-        updateProgress('prefetching');
-        router.prefetch('/');
-        
-        // Small delay to ensure UI updates are visible
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        updateProgress('redirecting');
-        router.replace(response.redirect);
-      } else {
-        console.error("Sign in failed:", response.error);
-        setIsLoading(false);
-        // Show error state in progress
-        setLoginStage('error');
-        setLoginProgress(0);
-        // Reset progress after a delay
-        setTimeout(() => {
-          setLoginStage('');
+        if (response.success) {
+          setFormError("");
+          updateProgress('creating_session');
+          // Use router.replace instead of window.location for faster navigation
+          // The session cookie is already set by the server action
+          updateProgress('prefetching');
+          router.prefetch('/');
+          
+          // Small delay to ensure UI updates are visible
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          updateProgress('redirecting');
+          router.replace(response.redirect);
+        } else {
+          console.error("Sign in failed:", response.error);
+          setFormError(response.error || "Failed to sign in.");
+          setIsLoading(false);
+          // Show error state in progress
+          setLoginStage('error');
           setLoginProgress(0);
-        }, 2000);
-      }
+          // Reset progress after a delay
+          setTimeout(() => {
+            setLoginStage('');
+            setLoginProgress(0);
+          }, 2000);
+        }
       }
     } catch (error) {
        console.error("Submission failed on client:", error);
@@ -962,6 +980,12 @@ const AuthForm = ({ type, showDemoLogin = false }: AuthFormProps) => {
               <CustomInput control={form.control} name='email' label="Email" placeholder="Enter your email" />
               <CustomInput control={form.control} name='password' label='Password' placeholder='Enter your password' />
               
+              {formError && (
+                <div className="text-red-500 text-sm font-medium p-3 bg-red-50 rounded-md border border-red-100">
+                  {formError}
+                </div>
+              )}
+
               <div className="flex flex-col gap-4">
                 <Button type="submit" disabled={isLoading} className='form-btn w-full'>
                   {isLoading ? (<><Loader2 size={20} className="animate-spin" /> &nbsp; Loading...</>) : type === 'sign-in' ? 'Sign In' : 'Sign Up'}
