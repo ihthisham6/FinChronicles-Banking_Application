@@ -160,7 +160,7 @@ export const signUp = async({password,...userData}: SignUpParams) => {
             const newUser = await database.createDocument(
               DATABASE_ID!,
               USER_COLLECTION_ID!,
-              ID. unique(),
+              ID.unique(),
               {
               ...userData,
               userId: newUserAccount.$id,

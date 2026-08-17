@@ -22,7 +22,7 @@ subtext="Effortlessly manage your banking activities"
           <div className="flex flex-wrap gap-6">
           {accounts && accounts.data.map((a: Account) => (
               <BankCard 
-                key={accounts.id}
+                key={a.id}
                 account={a}
                 userName={loggedIn?.firstName}
               />

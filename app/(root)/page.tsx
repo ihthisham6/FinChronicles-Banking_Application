@@ -63,7 +63,7 @@ import { cookies } from 'next/headers';
 import React from 'react'
 
 // Export data fetching function for prefetching
-export async function loadDashboardData(userId: string) {
+async function loadDashboardData(userId: string) {
   const [accounts] = await Promise.all([
     getAccounts({ userId }),
     // Add other data fetches here to load in parallel
