@@ -61,8 +61,20 @@ export const createDwollaCustomer = async (
     return await dwollaClient
       .post("customers", newCustomer)
       .then((res) => res.headers.get("location"));
-  } catch (err) {
+  } catch (err: any) {
     console.error("Creating a Dwolla Customer Failed: ", err);
+    if (err.body) {
+      console.error("Dwolla Error Body: ", JSON.stringify(err.body, null, 2));
+      let errorMessage = err.body.message || 'Error creating Dwolla customer';
+      if (err.body._embedded && err.body._embedded.errors) {
+        const details = err.body._embedded.errors.map((e: any) => e.message).join(', ');
+        if (details) {
+          errorMessage += `: ${details}`;
+        }
+      }
+      throw new Error(errorMessage);
+    }
+    throw err;
   }
 };
 
