@@ -20,21 +20,24 @@ const TransactionHistory = async ({ searchParams: { id, page }}:SearchParamProps
 
   if(!accounts) return null;
   
-  const accountsData = accounts?.data;
+  const accountsData = accounts?.data || [];
+  
+  // Prefer explicit id from query string; fall back to the first linked bank if present.
   const appwriteItemId = (id as string) || accountsData[0]?.appwriteItemId;
 
-  const account = await getAccount({ appwriteItemId })
+  // If no banks, avoid calling getAccount to prevent crash
+  const account = appwriteItemId ? await getAccount({ appwriteItemId }) : null;
 
 
 const rowsPerPage = 10;
-const totalPages = Math.ceil(account?.transactions.length / rowsPerPage);
+const totalPages = Math.ceil((account?.transactions?.length || 0) / rowsPerPage);
 
 const indexOfLastTransaction = currentPage * rowsPerPage;
 const indexOfFirstTransaction = indexOfLastTransaction - rowsPerPage;
 
-const currentTransactions = account?.transactions.slice(
+const currentTransactions = account?.transactions?.slice(
   indexOfFirstTransaction, indexOfLastTransaction
-)
+) || [];
   return (
     <div className="transactions">
       <div className="transactions-header">
